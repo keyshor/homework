@@ -14,3 +14,9 @@ Before doing anything, first replace `gym/envs/box2d/lunar_lander.py` with the p
 The only file that you need to look at is `train_pg_f18.py`, which you will implement.
 
 See the [HW2 PDF](http://rail.eecs.berkeley.edu/deeprlcourse/static/homeworks/hw2.pdf) for further instructions.
+
+## SOLUTION NOTES
+
+* Cartpole-v1 without reward-to-go and advantage normalization crashes as loss reaches math.inf.
+* Only use -e 1 for inverted pendulum. Otherwise you'll run into resource usage issues.
+* For inverted pendulum b* = 500 and r* = 5e-3 worked fine, but might not be best.

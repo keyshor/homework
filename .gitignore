@@ -96,3 +96,5 @@ deeprl/
 
 # pickle
 *.pkl
+
+hw2/data*
