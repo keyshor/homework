@@ -99,3 +99,5 @@ deeprl/
 
 hw2/data*
 hw3/data*
+
+*.DS_Store
