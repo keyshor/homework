@@ -1,4 +1,3 @@
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow_probability import distributions
@@ -72,16 +71,13 @@ class GaussianPolicy(Network):
 
             raw_actions = distribution.sample()
             if not self._reparameterize:
-                ### Problem 1.3.A
-                ### YOUR CODE HERE
-                raise NotImplementedError
+                # Problem 1.3.A
+                raw_actions = tf.stop_gradient(raw_actions)
             log_probs = distribution.log_prob(raw_actions)
             log_probs -= self._squash_correction(raw_actions)
 
-            actions = None
-            ### Problem 2.A
-            ### YOUR CODE HERE
-            raise NotImplementedError
+            # Problem 2.A
+            actions = tf.tanh(raw_actions)
 
             return actions, log_probs
 
@@ -92,9 +88,8 @@ class GaussianPolicy(Network):
         super(GaussianPolicy, self).build(input_shape)
 
     def _squash_correction(self, raw_actions):
-        ### Problem 2.B
-        ### YOUR CODE HERE
-        raise NotImplementedError
+        # Problem 2.B
+        return tf.reduce_sum(tf.log(1 - (tf.square(tf.tanh(raw_actions))) + 1e9))
 
     def eval(self, observation):
         assert self.built and observation.ndim == 1

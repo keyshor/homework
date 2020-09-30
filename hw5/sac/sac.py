@@ -1,6 +1,7 @@
 import tensorflow as tf
 import time
 
+
 class SAC:
     """Soft Actor-Critic (SAC)
     Original code from Tuomas Haarnoja, Soroush Nasiriany, and Aurick Zhou for CS294-112 Fall 2018
@@ -43,11 +44,9 @@ class SAC:
         policy_loss = self._policy_loss_for(policy, q_function, q_function2, value_function)
         value_function_loss = self._value_function_loss_for(
             policy, q_function, q_function2, value_function)
-        q_function_loss = self._q_function_loss_for(q_function,
-                                                    target_value_function)
+        q_function_loss = self._q_function_loss_for(q_function, target_value_function)
         if q_function2 is not None:
-            q_function2_loss = self._q_function_loss_for(q_function2,
-                                                        target_value_function)
+            q_function2_loss = self._q_function_loss_for(q_function2, target_value_function)
 
         optimizer = tf.train.AdamOptimizer(
             self._learning_rate, name='optimizer')
@@ -104,23 +103,47 @@ class SAC:
 
     def _policy_loss_for(self, policy, q_function, q_function2, value_function):
         if not self._reparameterize:
-            ### Problem 1.3.A
-            ### YOUR CODE HERE
-            raise NotImplementedError
+            # Problem 1.3.A
+            actions, log_pis = policy(self._observations_ph)
+            log_pis = tf.squeeze(log_pis)
+            q_values = tf.squeeze(q_function([self._observations_ph, actions]))
+            if q_function2 is not None:
+                q_values2 = tf.squeeze(q_function2([self._observations_ph, actions]))
+                q_values = tf.minimum(q_values, q_values2)
+            values = tf.squeeze(value_function(self._observations_ph))
+            multiplier = (self._alpha * log_pis) - q_values + values
+            policy_loss = tf.reduce_mean(log_pis * tf.stop_gradient(multiplier))
         else:
-            ### Problem 1.3.B
-            ### YOUR CODE HERE
-            raise NotImplementedError
+            # Problem 1.3.B
+            actions, log_pis = policy(self._observations_ph)
+            log_pis = tf.sqeeze(log_pis)
+            q_values = q_function([self._observations_ph, actions])
+            if q_function2 is not None:
+                q_values2 = q_function2([self._observations_ph, actions])
+                q_values = tf.minimum(q_values, q_values2)
+            policy_loss = tf.reduce_mean((self._alpha * log_pis) - q_values)
+        return policy_loss
 
     def _value_function_loss_for(self, policy, q_function, q_function2, value_function):
-        ### Problem 1.2.A
-        ### YOUR CODE HERE
-        raise NotImplementedError
+        # Problem 1.2.A
+        values = tf.squeeze(value_function(self._observations_ph))
+        actions, log_pis = policy(self._observations_ph)
+        log_pis = tf.squeeze(log_pis)
+        q_values = tf.squeeze(q_function([self._observations_ph, actions]))
+        if q_function2 is not None:
+            q_values2 = tf.squeeze(q_function2([self._observations_ph, actions]))
+            q_values = tf.minimum(q_values, q_values2)
+        target_values = q_values - (self._alpha * log_pis)
+        return tf.losses.mean_squared_error(target_values, values)
 
     def _q_function_loss_for(self, q_function, target_value_function):
-        ### Problem 1.1.A
-        ### YOUR CODE HERE
-        raise NotImplementedError
+        # Problem 1.1.A
+        q_values = tf.squeeze(q_function([self._observations_ph, self._actions_ph]))
+        target_values = self._rewards_ph + (
+            self._discount * (1 - self._terminals_ph) *
+            tf.squeeze(target_value_function(self._next_observations_ph)))
+        q_function_loss = tf.losses.mean_squared_error(target_values, q_values)
+        return q_function_loss
 
     def _create_target_update(self, source, target):
         """Create tensorflow operations for updating target value function."""

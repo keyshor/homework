@@ -99,5 +99,6 @@ deeprl/
 
 hw2/data*
 hw3/data*
+hw5/sac/data*
 
 *.DS_Store
